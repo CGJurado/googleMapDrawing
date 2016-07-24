@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Drawing tools</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+      
+      <link href="css/bootstrap.min.css" rel="stylesheet">
+      
+      
+      <link href="css/mystyle.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="capture"></div>
+      
+      <div id="menu">
+        <a class="btn btn-danger">Delete all</a>
+        <a class="btn btn-warning">Create area</a>
+      </div>
+      
+    <div id="mySidenav" class="sidenav">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    </div>
+
+      
+        <div id="myModal" class="modal">
+        <!-- Modal content -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="close">&times</span>
+                    <h2>Add Bussiness</h2>
+                </div>
+                <div class="modal-body">
+<!--                    <form id="myForm" action="addBussiness()">-->
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-xs-9 col-sm-9">
+                                    Bussiness name: <input type="text" name="bname">
+                                </div>
+                                <div class="col-xs-3 col-sm-3">
+                                    <a class="btn btn-success">Create bussiness</a>
+                                </div>
+                            </div>
+                            <span></span>
+                        </div>
+<!--                    </form>-->
+                </div>
+                <div class="modal-footer">
+                    <h3>CG</h3>
+                </div>
+            </div>
+        </div>
+      
+        <div id="myModalEdit" class="modal">
+        <!-- Modal content -->
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #1f8cd0;">
+                    <span class="close">&times</span>
+                    <h2>Edit Bussiness</h2>
+                </div>
+                <div class="modal-body">
+<!--                    <form id="myForm" action="addBussiness()">-->
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-xs-9 col-sm-9">
+                                    Bussiness name: <input class="edit" type="text" name="bname">
+                                </div>
+                                <div class="col-xs-3 col-sm-3">
+                                    <a class="btn btn-info">Edit bussiness</a>
+                                </div>
+                            </div>
+                            <span></span>
+                        </div>
+<!--                    </form>-->
+                </div>
+                <div class="modal-footer" style="background-color: #1f8cd0;">
+                    <h3>CG</h3>
+                </div>
+            </div>
+        </div>
+      
+        <div id="myModalDelete" class="modal">
+        <!-- Modal content -->
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #d01f1f;">
+                    <span class="close">&times</span>
+                    <h2>DELETE Bussiness</h2>
+                </div>
+                <div class="modal-body">
+<!--                    <form id="myForm" action="addBussiness()">-->
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-xs-6 col-sm-6">
+                                    
+                                </div>
+                                <div class="col-xs-6 col-sm-6">
+                                    <a class="btn btn-primary">DELETE bussiness</a>
+                                </div>
+                            </div>
+                            <span></span>
+                        </div>
+<!--                    </form>-->
+                </div>
+                <div class="modal-footer" style="background-color: #d01f1f;">
+                    <h3>CG</h3>
+                </div>
+            </div>
+        </div>
+      
+      
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+      <script src="js/bootstrap.min.js"></script>
+      
+    <script>
+      // This example requires the Drawing library. Include the libraries=drawing
+      // parameter when you first load the API. For example:
+      // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=drawing">
+        
+    var markersArea = [];
+    var markers = [];
+    var areaBusiness = [];
+    var polygons = [];
+    var tempPolygonIndex;
+    var tempMarkerIndex;
+    var lat;
+    var lng;
+    var tempMarker;
+    var sideNav = document.getElementById('mySidenav');
+        
+    // Get the modal
+    var modal = document.getElementById('myModal');
+    // Get the modalEdit
+    var modalEdit = document.getElementById('myModalEdit');
+    // Get the modalDelete
+    var modalDelete = document.getElementById('myModalDelete');
+    // Get the <span> element that closes the modal
+    var modalClose = document.getElementsByClassName("close")[0];
+    
+    var editModalClose = document.getElementsByClassName("close")[1];
+    
+    var deleteModalClose = document.getElementsByClassName("close")[2];
+        
+        /* Set the width of the side navigation to 250px */
+        function openNav() {
+            sideNav.style.width = "350px";
+        }
+
+        /* Set the width of the side navigation to 0 */
+        function closeNav() {
+            sideNav.style.width = "0";
+        }
+        
+        function formValidate(str){
+            if(str!=''){
+                $(".container span").text("Success!!").show();
+                return true;
+            } else {
+                $(".container span").text("Not valid!").show().fadeOut( 1000 );
+                return false;
+            }
+        };
+        
+        function bussinessEdit(index){
+//            console.log(areaBusiness[tempPolygonIndex].markers[index].title);
+            closeNav();
+            
+            modalEdit.style.display = "block";
+            tempMarkerIndex = index;
+        };
+        
+        function bussinessDelete(index){
+            closeNav();
+            
+            modalDelete.style.display = "block";
+            tempMarkerIndex = index;
+        };
+
+      function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 18.4682315, lng: -69.9353514},
+          zoom: 15
+        });
+          
+        google.maps.event.addListener(map, "click", function(event) {
+            
+            closeNav();
+            
+            lat = event.latLng.lat();
+            lng = event.latLng.lng();
+            
+            modal.style.display = "block";
+            $("input:first").focus();
+            
+            tempMarker = new google.maps.Marker({
+                map: map,
+                animation: google.maps.Animation.DROP,
+                draggable: false,
+                position: {lat: lat, lng: lng},
+                label: '?',
+                title: '?',
+                clickable: true
+            });
+            
+            tempMarker.setAnimation(google.maps.Animation.BOUNCE);
+            
+            modalClose.onclick = function() {
+                modal.style.display = "none";
+                tempMarker.setMap(null);
+            }
+            
+            editModalClose.onclick = function() {
+                modalEdit.style.display = "none";
+            }
+            
+            deleteModalClose.onclick = function() {
+                modalDelete.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                    tempMarker.setMap(null);
+                }else if(event.target == modalEdit){
+                    modalEdit.style.display = "none";
+                }else if(event.target == modalDelete){
+                    modalDelete.style.display = "none";
+                }
+            }
+            
+//            if(markersArea.length > 2){
+//                createArea();
+//                markersArea.length = 0;
+//            }
+            
+        });
+          
+        var addListenersOnPolygon = function(polygon) {
+          google.maps.event.addListener(polygon, 'click', function (event) {
+//            alert(polygon.indexID);
+              tempPolygonIndex = polygon.indexID;
+              var tempSidebar = $("#mySidenav");
+              $(".temp").remove();
+              var area = google.maps.geometry.spherical.computeArea(polygon.getPath());
+              
+              tempSidebar.append('<a href="#" class="temp">Area: ' + area + '</a>');
+              tempSidebar.append('<a href="#" class="temp">Businesses: </a>');
+              
+              for(var i = 0; i < areaBusiness[polygon.indexID].markers.length; i++){
+                tempSidebar.append('<a href="#" class="temp">' + areaBusiness[polygon.indexID].markers[i].title + '</a>');
+                tempSidebar.append('<button class="temp btn btn-info" onclick="bussinessEdit(' + i + ')">Edit</button><button class="temp btn btn-primary" onclick="bussinessDelete(' + i + ')">DELETE</button>');
+              }
+              
+              openNav();
+          });  
+        }
+          
+        var createBussiness = function(){
+            
+            if(formValidate($("input:first").val())){
+                
+                modal.style.display = "none";
+                tempMarker.setMap(null);
+                
+                var name = $("input:first").val();
+                $("input:first").val('');
+                // populate yor box/field with lat, lng
+    //            alert("Lat=" + lat + "; Lng=" + lng);
+                
+                var newMarker;
+                newMarker = new google.maps.Marker({
+                    map: map,
+                    animation: google.maps.Animation.DROP,
+                    draggable: false,
+                    position: {lat: lat, lng: lng},
+                    label: name,
+                    title: name,
+                    clickable: true
+                });
+
+                markers.push(newMarker);
+                markersArea.push({lat: lat, lng: lng});
+                
+            }
+
+            
+        }
+          
+        var createArea = function(){
+            var newPolygon;
+            newPolygon = new google.maps.Polygon({
+                paths: markersArea,
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 3,
+                fillColor: '#F0AD4E',
+                fillOpacity: 0.45,
+                indexID: areaBusiness.length
+            });
+            newPolygon.setMap(map);
+            addListenersOnPolygon(newPolygon);
+            areaBusiness.push({polygon: newPolygon, markers: markers});
+//            polygons.push(newPolygon);
+            markersArea.length = 0;
+            markers = [];
+        };
+          
+        var deleteAll = function(){
+            for (var i = 0; i < areaBusiness.length; i++ ) {
+                
+                for(var n = 0; n < areaBusiness[i].markers.length; n++){
+                    
+                    areaBusiness[i].markers[n].setMap(null);
+                }
+                areaBusiness[i].polygon.setMap(null);
+            }
+            
+            areaBusiness.length = 0;
+        }
+          
+        var refreshPolygons = function(){
+            for(var i = 0; i < areaBusiness.length; i++){
+                areaBusiness[i].polygon.setMap(map);
+            }
+        };
+
+//        var drawingManager = new google.maps.drawing.DrawingManager({
+//            drawingMode: google.maps.drawing.OverlayType.POLYGON,
+//            drawingControl: false,
+//            drawingControlOptions: {
+//                position: google.maps.ControlPosition.TOP_CENTER,
+//                drawingModes: [
+//                  google.maps.drawing.OverlayType.MARKER,
+//                  google.maps.drawing.OverlayType.CIRCLE,
+//                  google.maps.drawing.OverlayType.POLYGON,
+//                  google.maps.drawing.OverlayType.POLYLINE,
+//                  google.maps.drawing.OverlayType.RECTANGLE
+//                ]
+//            },
+//            markerOptions: {icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png'},
+//            circleOptions: {
+//                fillColor: '#ffff00',
+//                fillOpacity: 1,
+//                strokeWeight: 5,
+//                clickable: true,
+//                editable: true,
+//                zIndex: 1
+//            }
+//        });
+//        drawingManager.setMap(map);
+        var btnDlt = $(".btn-danger");
+        var btnCreateA = $(".btn-warning")
+        var btnCreateB = $(".btn-success");
+        var btnEditB = $(".btn-info");
+        var btnDeleteB = $(".btn-primary");
+        
+        btnDlt.click(function(){
+            deleteAll();
+        });
+          
+        btnCreateA.click(function(){
+            createArea();
+        });
+          
+        btnCreateB.click(function(){
+            createBussiness();
+        });
+          
+        btnEditB.click(function(){
+            var inputEdit = $("input.edit").val();
+            
+            if(formValidate(inputEdit)){
+                modalEdit.style.display = "none";
+                areaBusiness[tempPolygonIndex].markers[tempMarkerIndex].setMap(null);
+                areaBusiness[tempPolygonIndex].markers[tempMarkerIndex].title = inputEdit;
+                areaBusiness[tempPolygonIndex].markers[tempMarkerIndex].label = inputEdit;
+                areaBusiness[tempPolygonIndex].markers[tempMarkerIndex].setMap(map);
+                $("input.edit").val('');
+                
+                
+            }
+        });
+          
+        btnDeleteB.click(function(){
+            var tempMarkersArea = [];
+            
+            modalDelete.style.display = "none";
+            
+            areaBusiness[tempPolygonIndex].markers[tempMarkerIndex].setMap(null);
+            areaBusiness[tempPolygonIndex].markers.splice(tempMarkerIndex, 1);
+            areaBusiness[tempPolygonIndex].polygon.setMap(null);
+            
+            for(var i=0; i < areaBusiness[tempPolygonIndex].markers.length; i++){
+                tempMarkersArea.push(areaBusiness[tempPolygonIndex].markers[i].position);
+            }
+            
+            var newPolygon = new google.maps.Polygon({
+                paths: tempMarkersArea,
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 3,
+                fillColor: '#F0AD4E',
+                fillOpacity: 0.45,
+                indexID: tempPolygonIndex
+            });
+            newPolygon.setMap(map);
+            addListenersOnPolygon(newPolygon);
+            
+            
+            areaBusiness[tempPolygonIndex].polygon = newPolygon;
+        });
+        
+          
+      }
+        
+        
+        
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsYKWsRQzNiQGLlq-AjeHXjDZkcqaasnI&libraries=drawing&callback=initMap" async defer></script>
+  </body>
+</html>

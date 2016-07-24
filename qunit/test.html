@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <title>QUnit GoogleMaps Area DrawCalc</title>
+<!--      <link rel="stylesheet" href="//code.jquery.com/qunit/qunit-1.14.0.css">-->
+       <link rel="stylesheet" href="qunit-2.0.0.css">
+   </head>
+   <body>
+      <div id="qunit"></div>
+      <div id="qunit-fixture"></div>
+<!--      <script src="//code.jquery.com/qunit/qunit-1.14.0.js"></script>-->
+       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+       <script src="qunit-2.0.0.js"></script>
+      <script src="tests.js"></script>
+       
+       <script>
+           // Tests here
+           var marker = function(testName,lat1,lng1){
+               
+               var name = testName;
+               
+               var newMarker = {
+                   map: 'map',
+                    animation: 'google.maps.Animation.DROP',
+                    draggable: false,
+                    position: {lat: lat1, lng: lng1},
+                    label: name,
+                    title: name,
+                    clickable: true
+               }
+               
+               return newMarker;
+           }
+           
+           function expectedArea(n){
+                var area = [];
+                var lat, lng;
+
+                for(var i = 0; i < n; i++){
+                    lat = Math.random() * (40 - 10) + 10;
+                    lng = Math.random() * (-40 + 70) - 70;
+                    area.push({lat: lat, lng: lng});
+                }
+                return area;
+            }
+           
+           function createPolygons(){
+               
+               var areaBusiness = [];
+               
+               var triangle = expectedArea(3);
+               var markers = [];
+               
+               for (var i = 0; i < triangle.length; i++ ) {
+                
+                    for(var n = 0; n < triangle.length; n++){
+
+                        markers.push(App.createBusiness(triangle[i].lat,triangle[i].lng))
+                    }
+                    areaBusiness.push({polygon: App.createArea(triangle), markers: markers});
+                    markers.length = 0;
+                }
+                
+               return areaBusiness;
+           }
+           
+        var App = {
+            createBusiness: function (lat1,lng1) {
+
+                var newMarker = new marker("businessName",lat1,lng1);
+
+                return newMarker;
+
+            },
+            createArea: function (markersArea) {
+                var newPolygon = {
+                    paths: markersArea,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 3,
+                    fillColor: '#F0AD4E',
+                    fillOpacity: 0.45,
+                    indexID: 1
+                };
+                
+                return newPolygon;
+            },
+            updateBusiness: function (marker, newName) {
+                marker.label = newName;
+                marker.title = newName;
+                
+                return marker;
+            },
+            deleteBusiness: function (areaPos, deletePos) {
+                
+                var newArea = [];
+                newArea.push(App.createArea(areaPos));
+                var pos = newArea[0].paths;
+                
+                pos.splice(deletePos - 1 , 1);
+                
+                newArea.splice(0 , 1);
+                
+                newArea.push(App.createArea(pos));
+                
+                return newArea[0];
+            },
+            deleteAll: function (polygons) {
+                
+                
+                for (var i = 0; i < 3; i++ ) {
+                
+                    for(var n = 0; n < polygons[0].markers.length; n++){
+
+                        polygons[0].markers.splice(n, 1);
+                    }
+                    polygons.splice(0, 1);
+                }
+                
+                return polygons.length === 0;
+            }
+        };
+      </script>
+   </body>
+</html>
